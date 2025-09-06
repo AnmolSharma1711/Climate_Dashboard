@@ -18,7 +18,7 @@ import {
 } from "recharts";
 
 // Leaflet
-import { MapContainer, TileLayer, CircleMarker, Tooltip as LeafletTooltip, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, CircleMarker, Tooltip as LeafletTooltip, useMap, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 
 // Map control component to handle automatic navigation
@@ -37,6 +37,18 @@ const MapController = ({ center, zoom }) => {
   return null;
 };
 
+// Map click handler component
+const MapClickHandler = ({ onMapClick }) => {
+  useMapEvents({
+    click: (e) => {
+      const { lat, lng } = e.latlng;
+      onMapClick(lat, lng);
+    }
+  });
+  
+  return null;
+};
+
 function App() {
   const [data, setData] = useState([]);
   const [summary, setSummary] = useState("");
@@ -47,6 +59,7 @@ function App() {
   const [currentWeather, setCurrentWeather] = useState(null);
   const [mapCenter, setMapCenter] = useState([20, 0]); // Default world center
   const [mapZoom, setMapZoom] = useState(2);
+  const [mapClickLoading, setMapClickLoading] = useState(false);
 
   // Fetch data for selected city and date range
   const fetchDataForCity = async (city, days = selectedDateRange) => {
@@ -100,6 +113,35 @@ function App() {
       setMapZoom(6); // Zoom to city level
     }
   }, [currentWeather]);
+
+  // Handle map click to get location details
+  const handleMapClick = async (lat, lng) => {
+    setMapClickLoading(true);
+    try {
+      // Use reverse geocoding with coordinates
+      const coords = `${lat},${lng}`;
+      console.log(`Map clicked at coordinates: ${coords}`);
+      
+      // Fetch current weather data for the clicked coordinates
+      const response = await axios.get(`http://127.0.0.1:5000/api/current?city=${coords}`);
+      
+      if (response.data && response.data.city) {
+        const locationName = response.data.city;
+        setSelectedCity(locationName);
+        setCurrentWeather(response.data);
+        setMapCenter([lat, lng]);
+        setMapZoom(8);
+        
+        // Also fetch historical data for the new location
+        fetchDataForCity(locationName, selectedDateRange);
+      }
+    } catch (error) {
+      console.error("Error fetching location data from map click:", error);
+      alert("Could not get location details for this area. Please try clicking on a populated area or use the search bar.");
+    } finally {
+      setMapClickLoading(false);
+    }
+  };
 
   const handleDateRangeChange = (days) => {
     setSelectedDateRange(days);
@@ -349,6 +391,12 @@ function App() {
                     📍 {currentWeather.city}, {currentWeather.country}
                   </span>
                 )}
+                {mapClickLoading && (
+                  <span className="ms-2">
+                    <i className="fas fa-spinner fa-spin text-primary"></i>
+                    <small className="text-primary ms-1">Getting location data...</small>
+                  </span>
+                )}
               </h5>
               
               {/* Earth-like spherical map container */}
@@ -386,7 +434,8 @@ function App() {
                   style={{ 
                     height: "100%", 
                     width: "100%",
-                    borderRadius: "50%"
+                    borderRadius: "50%",
+                    cursor: "crosshair" // Pin cursor for clicking
                   }}
                   worldCopyJump={true} // Enables horizontal scrolling around the world
                   maxBounds={[[-90, -180], [90, 180]]} // World bounds
@@ -413,6 +462,9 @@ function App() {
                   
                   {/* Map controller for automatic navigation */}
                   <MapController center={mapCenter} zoom={mapZoom} />
+                  
+                  {/* Map click handler */}
+                  <MapClickHandler onMapClick={handleMapClick} />
                   
                   {/* Location marker */}
                   {currentWeather && currentWeather.latitude && currentWeather.longitude && (

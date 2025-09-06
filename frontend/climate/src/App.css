@@ -101,6 +101,21 @@ html, body {
 /* Custom Leaflet Map Styles */
 .leaflet-container {
   background: #1a365d !important;
+  cursor: crosshair !important; /* Pin cursor for clicking */
+}
+
+/* Hand cursor when dragging */
+.leaflet-container.leaflet-drag-target {
+  cursor: grab !important;
+}
+
+.leaflet-container.leaflet-drag-target:active {
+  cursor: grabbing !important;
+}
+
+/* Pin cursor for clickable areas */
+.leaflet-container:hover {
+  cursor: crosshair !important;
 }
 
 .leaflet-tooltip {
@@ -121,6 +136,15 @@ html, body {
   color: #1f2937;
   font-weight: 500;
   line-height: 1.4;
+}
+
+/* Override Leaflet's default grab cursor for dragging */
+.leaflet-grab {
+  cursor: grab !important;
+}
+
+.leaflet-grabbing {
+  cursor: grabbing !important;
 }
 
 /* Responsive map container */
