@@ -1,14 +1,28 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import requests
+import cohere
 import datetime
+
 from datetime import timedelta
 import os
+from dotenv import load_dotenv
 
+
+load_dotenv()
 app = Flask(__name__)
 CORS(app)
 
-# WeatherAPI configuration
+"""
+Gemini API configuration
+You need to set your Gemini API key as an environment variable: GEMINI_API_KEY
+Install the package: pip install google-generativeai
+"""
+COHERE_API_KEY = os.getenv("COHERE_API_KEY")
+print("COHERE_API_KEY loaded:", bool(COHERE_API_KEY))
+cohere_client = None
+if COHERE_API_KEY:
+    cohere_client = cohere.Client(COHERE_API_KEY)
 WEATHER_API_KEY = "12ec4534ab854fac9a945953250609"  # Replace with your actual API key
 WEATHER_API_BASE_URL = "http://api.weatherapi.com/v1"
 
@@ -463,11 +477,40 @@ def get_summary():
             else:
                 aqi_status = "very unhealthy air quality"
             
-            summary = (f"Current temperature in {current_data['city']} is {current_data['temperature']}°C. "
-                      f"7-day average temperature is {avg_temp:.1f}°C. "
-                      f"Average rainfall is {avg_rainfall:.2f}mm. "
-                      f"Current AQI is {current_data['AQI']}, indicating {aqi_status}.")
-                      
+            # Compose a prompt for Cohere
+            prompt = (
+                f"Weather data for {current_data['city']}:\n"
+                f"Current temperature: {current_data['temperature']}°C\n"
+                f"7-day average temperature: {avg_temp:.1f}°C\n"
+                f"Average rainfall: {avg_rainfall:.2f}mm\n"
+                f"Current AQI: {current_data['AQI']} ({aqi_status})\n"
+                "Give a short, friendly one-line summary of the weather and air quality for local residents. "
+                "Then, in a separate line, give a creative, actionable recommendation for what people can do today based on the weather (e.g., 'It's rainy—enjoy tea and pakodas with family!'). "
+                "Keep both lines concise and engaging."
+            )
+            cohere_summary = None
+            if cohere_client:
+                try:
+                    response = cohere_client.generate(
+                        model="command",
+                        prompt=prompt,
+                        max_tokens=300,
+                        temperature=0.7
+                    )
+                    cohere_summary = response.generations[0].text.strip()
+                except Exception as ce:
+                    print(f"Cohere API error: {ce}")
+                    cohere_summary = None
+            # Fallback to basic summary if Cohere fails
+            if cohere_summary:
+                summary = cohere_summary
+            else:
+                summary = (
+                    f"Current temperature in {current_data['city']} is {current_data['temperature']}°C. "
+                    f"7-day average temperature is {avg_temp:.1f}°C. "
+                    f"Average rainfall is {avg_rainfall:.2f}mm. "
+                    f"Current AQI is {current_data['AQI']}, indicating {aqi_status}."
+                )
             return jsonify({'summary': summary})
         else:
             return jsonify({'summary': 'Unable to generate summary at this time.'})

@@ -384,10 +384,21 @@ function App() {
           </div>
         )}
 
-        {/* Summary */}
-        <div className="alert alert-info">
-          <h5>Summary</h5>
-          <p>{summary || "Loading summary..."}</p>
+        {/* Gemini-powered Summary */}
+        <div className="alert alert-info d-flex align-items-center" style={{minHeight: '80px'}}>
+          <div>
+            <h5 className="mb-2">Gemini Weather Summary</h5>
+            {loading ? (
+              <div className="d-flex align-items-center">
+                <div className="spinner-border spinner-border-sm me-2" role="status">
+                  <span className="visually-hidden">Loading...</span>
+                </div>
+                <span>Loading summary...</span>
+              </div>
+            ) : (
+              <p style={{whiteSpace: 'pre-line'}}>{summary || "No summary available."}</p>
+            )}
+          </div>
         </div>
 
         {/* Date Range Selector */}
