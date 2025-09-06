@@ -53,13 +53,14 @@ function App() {
   const [data, setData] = useState([]);
   const [summary, setSummary] = useState("");
   const [anomalies, setAnomalies] = useState([]);
-  const [selectedCity, setSelectedCity] = useState("London");
+  const [selectedCity, setSelectedCity] = useState(""); // Start with empty, will be set by geolocation
   const [selectedDateRange, setSelectedDateRange] = useState(7); // Default to 7 days
   const [loading, setLoading] = useState(false);
   const [currentWeather, setCurrentWeather] = useState(null);
   const [mapCenter, setMapCenter] = useState([20, 0]); // Default world center
   const [mapZoom, setMapZoom] = useState(2);
   const [mapClickLoading, setMapClickLoading] = useState(false);
+  const [locationDetected, setLocationDetected] = useState(false);
 
   // Fetch data for selected city and date range
   const fetchDataForCity = async (city, days = selectedDateRange) => {
@@ -88,12 +89,75 @@ function App() {
     }
   };
 
+  // Get user's current location
+  const getCurrentLocationData = () => {
+    if (!navigator.geolocation) {
+      console.log('Geolocation not supported, falling back to London');
+      setSelectedCity("London");
+      setLocationDetected(true);
+      return;
+    }
+
+    setLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        
+        try {
+          // Use coordinates to get location name and weather data
+          const coords = `${latitude},${longitude}`;
+          const response = await axios.get(`http://127.0.0.1:5000/api/current?city=${coords}`);
+          
+          if (response.data && response.data.city) {
+            const locationName = response.data.city;
+            setSelectedCity(locationName);
+            setCurrentWeather(response.data);
+            setMapCenter([latitude, longitude]);
+            setMapZoom(8);
+            setLocationDetected(true);
+            
+            // Fetch additional data for the detected location
+            fetchDataForCity(locationName, selectedDateRange);
+          } else {
+            throw new Error('No location data received');
+          }
+        } catch (error) {
+          console.error('Error getting location details:', error);
+          console.log('Falling back to London');
+          setSelectedCity("London");
+          setLocationDetected(true);
+        } finally {
+          setLoading(false);
+        }
+      },
+      (error) => {
+        console.error('Geolocation error:', error);
+        console.log('Falling back to London');
+        setSelectedCity("London");
+        setLocationDetected(true);
+        setLoading(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 60000
+      }
+    );
+  };
+
   // Fetch data when city or date range changes
   useEffect(() => {
     if (selectedCity) {
       fetchDataForCity(selectedCity, selectedDateRange);
     }
   }, [selectedCity, selectedDateRange]);
+
+  // Get current location on app load
+  useEffect(() => {
+    if (!locationDetected) {
+      getCurrentLocationData();
+    }
+  }, []);
 
   const handleLocationSelect = (cityName) => {
     setSelectedCity(cityName);
@@ -149,7 +213,7 @@ function App() {
 
   const getAQIColor = (aqi) => {
     if (aqi <= 50) return "#00e400"; // Good - Green
-    if (aqi <= 100) return "#ffff00"; // Moderate - Yellow
+    if (aqi <= 100) return "#6c757d"; // Moderate - Dark Gray
     if (aqi <= 150) return "#ff7e00"; // Unhealthy for Sensitive Groups - Orange
     if (aqi <= 200) return "#ff0000"; // Unhealthy - Red
     if (aqi <= 300) return "#8f3f97"; // Very Unhealthy - Purple
@@ -163,6 +227,48 @@ function App() {
     if (aqi <= 200) return "Unhealthy";
     if (aqi <= 300) return "Very Unhealthy";
     return "Hazardous";
+  };
+
+  // Get weather emoji based on condition
+  const getWeatherEmoji = (condition) => {
+    const conditionLower = condition.toLowerCase();
+    
+    // Sunny/Clear conditions
+    if (conditionLower.includes('sunny') || conditionLower.includes('clear')) {
+      return '☀️';
+    }
+    // Partly cloudy
+    else if (conditionLower.includes('partly cloudy') || conditionLower.includes('partly')) {
+      return '⛅';
+    }
+    // Cloudy/Overcast
+    else if (conditionLower.includes('cloudy') || conditionLower.includes('overcast')) {
+      return '☁️';
+    }
+    // Rain
+    else if (conditionLower.includes('rain') || conditionLower.includes('drizzle') || conditionLower.includes('shower')) {
+      return '🌧️';
+    }
+    // Heavy rain/Storm
+    else if (conditionLower.includes('heavy rain') || conditionLower.includes('storm') || conditionLower.includes('thunderstorm')) {
+      return '⛈️';
+    }
+    // Snow
+    else if (conditionLower.includes('snow') || conditionLower.includes('blizzard')) {
+      return '❄️';
+    }
+    // Fog/Mist
+    else if (conditionLower.includes('fog') || conditionLower.includes('mist') || conditionLower.includes('haze')) {
+      return '🌫️';
+    }
+    // Wind
+    else if (conditionLower.includes('wind')) {
+      return '💨';
+    }
+    // Default for unknown conditions
+    else {
+      return '🌤️';
+    }
   };
 
   // Format date for chart display
@@ -218,6 +324,24 @@ function App() {
       </nav>
 
       <div className="px-3">
+        {/* Location Detection Loading */}
+        {!locationDetected && loading && (
+          <div className="row mb-4">
+            <div className="col-12">
+              <div className="alert alert-info d-flex align-items-center">
+                <div className="spinner-border spinner-border-sm me-3" role="status">
+                  <span className="visually-hidden">Loading...</span>
+                </div>
+                <div>
+                  <strong>📍 Detecting your location...</strong>
+                  <br />
+                  <small>Getting weather data for your current area. If this takes too long, we'll use London as default.</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Current Weather Card */}
         {currentWeather && (
           <div className="row mb-4">
@@ -226,36 +350,32 @@ function App() {
                 <div className="card-body">
                   <h5 className="card-title">Current Weather in {currentWeather.city}</h5>
                   <div className="row">
-                    <div className="col-md-3">
-                      <h3>{currentWeather.temperature}°C</h3>
-                      <p className="mb-1">{currentWeather.condition}</p>
-                      <small>Humidity: {currentWeather.humidity}%</small>
+                    <div className="col-md-4">
+                      <div className="d-flex align-items-center mb-2">
+                        <div className="text-center me-4">
+                          <div className="fs-1">{getWeatherEmoji(currentWeather.condition)}</div>
+                          <small className="text-light">{currentWeather.condition}</small>
+                        </div>
+                        <div>
+                          <h1 className="mb-0 fw-bold">{currentWeather.temperature}°C</h1>
+                        </div>
+                      </div>
+                      <small>💧 Humidity: {currentWeather.humidity}%</small>
                     </div>
-                    <div className="col-md-3">
-                      <h5>Air Quality</h5>
+                    <div className="col-md-4">
+                      <h5>🌬️ Air Quality</h5>
                       <span 
                         className="badge fs-6 mb-2" 
                         style={{backgroundColor: getAQIColor(currentWeather.AQI)}}
                       >
                         AQI: {currentWeather.AQI} - {getAQILabel(currentWeather.AQI)}
                       </span>
-                      <div className="small">
-                        <div>PM2.5: {currentWeather['PM2.5']} μg/m³</div>
-                        <div>PM10: {currentWeather.PM10} μg/m³</div>
-                      </div>
                     </div>
-                    <div className="col-md-3">
-                      <h6>Weather Details</h6>
-                      <p className="mb-1">Wind: {currentWeather.wind_speed} km/h</p>
-                      <p className="mb-1">Pressure: {currentWeather.pressure} mb</p>
-                      <p className="mb-1">UV Index: {currentWeather.uv_index}</p>
-                    </div>
-                    <div className="col-md-3">
-                      <h6>Other Pollutants</h6>
-                      <p className="mb-1">NO2: {currentWeather.NO2} μg/m³</p>
-                      <p className="mb-1">SO2: {currentWeather.SO2} μg/m³</p>
-                      <p className="mb-1">CO: {currentWeather.CO} μg/m³</p>
-                      <p className="mb-1">O3: {currentWeather.O3} μg/m³</p>
+                    <div className="col-md-4">
+                      <h6>📊 Weather Details</h6>
+                      <p className="mb-1">💨 Wind: {currentWeather.wind_speed} km/h</p>
+                      <p className="mb-1">📏 Pressure: {currentWeather.pressure} mb</p>
+                      <p className="mb-1">☀️ UV Index: {currentWeather.uv_index}</p>
                     </div>
                   </div>
                 </div>
@@ -282,13 +402,16 @@ function App() {
           <div className="col-md-6 mb-4">
             <div className="card">
               <div className="card-body">
-                <h5 className="card-title">Temperature Trend (Past {selectedDateRange} days)</h5>
+                <h5 className="card-title">🌡️ Temperature Trend (Past {selectedDateRange} days)</h5>
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={processedData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="formattedDate" />
-                    <YAxis />
-                    <Tooltip />
+                    <YAxis label={{ value: 'Temperature (°C)', angle: -90, position: 'insideLeft' }} />
+                    <Tooltip 
+                      formatter={(value) => [`${value}°C`, 'Temperature']}
+                      labelFormatter={(label) => `Date: ${label}`}
+                    />
                     <Line type="monotone" dataKey="temperature" stroke="#ff7300" strokeWidth={2} />
                   </LineChart>
                 </ResponsiveContainer>
@@ -299,13 +422,16 @@ function App() {
           <div className="col-md-6 mb-4">
             <div className="card">
               <div className="card-body">
-                <h5 className="card-title">Rainfall (Past {selectedDateRange} days)</h5>
+                <h5 className="card-title">🌧️ Rainfall (Past {selectedDateRange} days)</h5>
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={processedData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="formattedDate" />
-                    <YAxis />
-                    <Tooltip />
+                    <YAxis label={{ value: 'Rainfall (mm)', angle: -90, position: 'insideLeft' }} />
+                    <Tooltip 
+                      formatter={(value) => [`${value} mm`, 'Rainfall']}
+                      labelFormatter={(label) => `Date: ${label}`}
+                    />
                     <Bar dataKey="rainfall" fill="#82ca9d" />
                   </BarChart>
                 </ResponsiveContainer>
@@ -499,7 +625,7 @@ function App() {
                     <span style={{backgroundColor: '#00e400', color: 'white', padding: '2px 6px', borderRadius: '3px', fontSize: '10px'}}>Good</span>
                   </span>
                   <span className="me-3">
-                    <span style={{backgroundColor: '#ffff00', color: 'black', padding: '2px 6px', borderRadius: '3px', fontSize: '10px'}}>Moderate</span>
+                    <span style={{backgroundColor: '#6c757d', color: 'white', padding: '2px 6px', borderRadius: '3px', fontSize: '10px'}}>Moderate</span>
                   </span>
                   <span className="me-3">
                     <span style={{backgroundColor: '#ff7e00', color: 'white', padding: '2px 6px', borderRadius: '3px', fontSize: '10px'}}>Unhealthy for Sensitive</span>
