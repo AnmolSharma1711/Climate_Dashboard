@@ -56,11 +56,13 @@ function App() {
   const [selectedCity, setSelectedCity] = useState(""); // Start with empty, will be set by geolocation
   const [selectedDateRange, setSelectedDateRange] = useState(7); // Default to 7 days
   const [loading, setLoading] = useState(false);
+  const [summaryLoading, setSummaryLoading] = useState(false);
   const [currentWeather, setCurrentWeather] = useState(null);
   const [mapCenter, setMapCenter] = useState([20, 0]); // Default world center
   const [mapZoom, setMapZoom] = useState(2);
   const [mapClickLoading, setMapClickLoading] = useState(false);
   const [locationDetected, setLocationDetected] = useState(false);
+  const [summaryCache, setSummaryCache] = useState({}); // Cache summaries by city
 
   // Fetch data for selected city and date range
   const fetchDataForCity = async (city, days = selectedDateRange) => {
@@ -74,9 +76,28 @@ function App() {
       const currentRes = await axios.get(`http://127.0.0.1:5000/api/current?city=${city}`);
       setCurrentWeather(currentRes.data);
 
-      // Fetch summary
-      const summaryRes = await axios.get(`http://127.0.0.1:5000/api/summary?city=${city}`);
-      setSummary(summaryRes.data.summary);
+      // Check if we have a cached summary for this city
+      if (summaryCache[city]) {
+        setSummary(summaryCache[city]);
+      } else {
+        // Fetch summary only if not cached
+        setSummaryLoading(true);
+        try {
+          const summaryRes = await axios.get(`http://127.0.0.1:5000/api/summary?city=${city}`);
+          const newSummary = summaryRes.data.summary;
+          setSummary(newSummary);
+          // Cache the summary
+          setSummaryCache(prev => ({
+            ...prev,
+            [city]: newSummary
+          }));
+        } catch (err) {
+          console.error("Error fetching summary:", err);
+          setSummary("Unable to generate summary at this time.");
+        } finally {
+          setSummaryLoading(false);
+        }
+      }
 
       // Fetch anomalies
       const anomaliesRes = await axios.get(`http://127.0.0.1:5000/api/anomalies?city=${city}`);
@@ -312,7 +333,7 @@ function App() {
       {/* Navbar */}
       <nav className="navbar navbar-dark bg-dark mb-4">
         <div className="container-fluid">
-          <span className="navbar-brand mb-0 h1">🌍 Climate Data Visual Explorer</span>
+          <span className="navbar-brand mb-0 h1">�️ MausamNow</span>
           <div className="d-flex align-items-center">
             <LocationSearch 
               onLocationSelect={handleLocationSelect}
@@ -384,19 +405,26 @@ function App() {
           </div>
         )}
 
-        {/* Gemini-powered Summary */}
+        {/* MausamNow Insights */}
         <div className="alert alert-info d-flex align-items-center" style={{minHeight: '80px'}}>
           <div>
-            <h5 className="mb-2">Gemini Weather Summary</h5>
-            {loading ? (
+            <h5 className="mb-2">🌦️ MausamNow Insights</h5>
+            {summaryLoading ? (
               <div className="d-flex align-items-center">
                 <div className="spinner-border spinner-border-sm me-2" role="status">
                   <span className="visually-hidden">Loading...</span>
                 </div>
-                <span>Loading summary...</span>
+                <span>Loading</span>
               </div>
+            ) : summary ? (
+              <p style={{whiteSpace: 'pre-line'}}>{summary}</p>
             ) : (
-              <p style={{whiteSpace: 'pre-line'}}>{summary || "No summary available."}</p>
+              <div className="d-flex align-items-center">
+                <div className="spinner-border spinner-border-sm me-2" role="status">
+                  <span className="visually-hidden">Loading...</span>
+                </div>
+                <span>Loading</span>
+              </div>
             )}
           </div>
         </div>
