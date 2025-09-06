@@ -14,16 +14,19 @@ app = Flask(__name__)
 CORS(app)
 
 """
-Gemini API configuration
-You need to set your Gemini API key as an environment variable: GEMINI_API_KEY
-Install the package: pip install google-generativeai
+Weather and Cohere API configuration
+You need to set your API keys as environment variables: WEATHER_API_KEY, COHERE_API_KEY
 """
 COHERE_API_KEY = os.getenv("COHERE_API_KEY")
 print("COHERE_API_KEY loaded:", bool(COHERE_API_KEY))
 cohere_client = None
 if COHERE_API_KEY:
     cohere_client = cohere.Client(COHERE_API_KEY)
-WEATHER_API_KEY = "12ec4534ab854fac9a945953250609"  # Replace with your actual API key
+
+WEATHER_API_KEY = os.getenv("WEATHER_API_KEY")
+print("WEATHER_API_KEY loaded:", bool(WEATHER_API_KEY))
+if not WEATHER_API_KEY:
+    print("WARNING: WEATHER_API_KEY not found in environment variables. Weather functionality may not work.")
 WEATHER_API_BASE_URL = "http://api.weatherapi.com/v1"
 
 def calculate_aqi_from_pm25(pm25):

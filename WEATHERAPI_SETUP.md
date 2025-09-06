@@ -13,21 +13,26 @@
    - Air quality data
    - 1 million calls/month
 
-### Step 2: Configure Your API Key
-1. Open `backend/app_weatherapi.py`
-2. Find the line: `WEATHER_API_KEY = "YOUR_API_KEY_HERE"`
-3. Replace `"YOUR_API_KEY_HERE"` with your actual API key
+### Step 2: Configure Your Environment Variables
+1. Navigate to the `backend` folder in your project
+2. Create or update the `.env` file with your API keys:
+   ```env
+   WEATHER_API_KEY=your_weather_api_key_here
+   COHERE_API_KEY=your_cohere_api_key_here
+   ```
+3. Replace `your_weather_api_key_here` with your actual WeatherAPI key
+4. The Cohere API key is optional (for AI-powered weather summaries)
 
-### Step 3: Switch to WeatherAPI Backend
-1. Rename your current `app.py` to `app_csv_backup.py`
-2. Rename `app_weatherapi.py` to `app.py`
-3. Similarly, rename your frontend files:
-   - Rename `App.jsx` to `App_csv_backup.jsx`
-   - Rename `App_weatherapi.jsx` to `App.jsx`
+### Step 3: Environment Variables Benefits
+✅ **Security**: API keys are not exposed in code  
+✅ **Flexibility**: Easy to change keys without code modifications  
+✅ **Production Ready**: Standard practice for deployment  
+✅ **Git Safe**: .env files are typically ignored by version control  
 
 ### Step 4: Run the Application
 1. Start the backend: `python app.py`
 2. Start the frontend: `npm start`
+3. The app will automatically load your API keys from the `.env` file
 
 ## 🌟 Features You'll Get
 

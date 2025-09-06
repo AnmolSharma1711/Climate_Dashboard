@@ -67,9 +67,10 @@ The dashboard calculates AQI using EPA standards for:
    pip install -r requirements.txt
    ```
 
-3. Set up WeatherAPI key in `app.py`:
-   ```python
-   WEATHER_API_KEY = "your_api_key_here"
+3. Create a `.env` file in the backend directory:
+   ```env
+   WEATHER_API_KEY=your_weather_api_key_here
+   COHERE_API_KEY=your_cohere_api_key_here
    ```
 
 4. Start the Flask server:
@@ -100,12 +101,13 @@ The dashboard calculates AQI using EPA standards for:
 ### WeatherAPI Setup
 1. Sign up at [WeatherAPI.com](https://www.weatherapi.com/)
 2. Get your free API key
-3. Replace the API key in `backend/app.py`
+3. Add the API key to your `.env` file (as shown in Backend Setup)
 
 ### Environment Variables
-Create a `.env` file in the backend directory:
+The `.env` file in the backend directory should contain:
 ```env
-WEATHER_API_KEY=your_api_key_here
+WEATHER_API_KEY=your_weather_api_key_here
+COHERE_API_KEY=your_cohere_api_key_here
 FLASK_ENV=development
 ```
 
