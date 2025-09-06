@@ -1,0 +1,114 @@
+/* LocationSearch Component Styles */
+.location-search {
+  min-width: 350px;
+}
+
+.location-search .input-group {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.location-search .form-control {
+  border: none;
+  padding: 12px 16px;
+  font-size: 14px;
+}
+
+.location-search .form-control:focus {
+  box-shadow: none;
+  border-color: transparent;
+}
+
+.location-search .input-group-text {
+  border: none;
+  background-color: #f8f9fa;
+  color: #6c757d;
+}
+
+.location-search .btn {
+  border: none;
+  padding: 12px 16px;
+  transition: all 0.3s ease;
+}
+
+.location-search .btn:hover:not(:disabled) {
+  background-color: #0056b3;
+  color: white;
+}
+
+.suggestion-item {
+  transition: background-color 0.2s ease;
+  border-radius: 0;
+}
+
+.suggestion-item:hover {
+  background-color: #f8f9fa !important;
+}
+
+.suggestion-item:last-child {
+  border-bottom: none !important;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .location-search {
+    min-width: 250px;
+  }
+  
+  .location-search .form-control {
+    font-size: 12px;
+    padding: 10px 12px;
+  }
+  
+  .location-search .btn,
+  .location-search .input-group-text {
+    padding: 10px 12px;
+  }
+}
+
+/* Dark theme support for navbar */
+.navbar-dark .location-search .form-control {
+  background-color: white;
+  color: #333;
+}
+
+.navbar-dark .location-search .input-group-text {
+  background-color: #e9ecef;
+}
+
+/* Loading animation */
+.location-search .spinner-border-sm {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* Success indicator */
+.location-search .text-success {
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+/* Suggestions dropdown */
+.location-search .position-absolute {
+  border-radius: 0 0 8px 8px;
+  margin-top: -1px;
+}
+
+/* Custom scrollbar for suggestions */
+.location-search .position-absolute::-webkit-scrollbar {
+  width: 6px;
+}
+
+.location-search .position-absolute::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.location-search .position-absolute::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.location-search .position-absolute::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
