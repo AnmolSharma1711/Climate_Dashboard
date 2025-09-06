@@ -18,8 +18,24 @@ import {
 } from "recharts";
 
 // Leaflet
-import { MapContainer, TileLayer, CircleMarker, Tooltip as LeafletTooltip } from "react-leaflet";
+import { MapContainer, TileLayer, CircleMarker, Tooltip as LeafletTooltip, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
+
+// Map control component to handle automatic navigation
+const MapController = ({ center, zoom }) => {
+  const map = useMap();
+  
+  React.useEffect(() => {
+    if (center && center[0] && center[1]) {
+      map.setView(center, zoom || 6, {
+        animate: true,
+        duration: 1.5
+      });
+    }
+  }, [map, center, zoom]);
+  
+  return null;
+};
 
 function App() {
   const [data, setData] = useState([]);
@@ -29,6 +45,8 @@ function App() {
   const [selectedDateRange, setSelectedDateRange] = useState(7); // Default to 7 days
   const [loading, setLoading] = useState(false);
   const [currentWeather, setCurrentWeather] = useState(null);
+  const [mapCenter, setMapCenter] = useState([20, 0]); // Default world center
+  const [mapZoom, setMapZoom] = useState(2);
 
   // Fetch data for selected city and date range
   const fetchDataForCity = async (city, days = selectedDateRange) => {
@@ -67,6 +85,21 @@ function App() {
   const handleLocationSelect = (cityName) => {
     setSelectedCity(cityName);
   };
+
+  const handleLocationCoordinates = (coordinates) => {
+    if (coordinates && coordinates[0] && coordinates[1]) {
+      setMapCenter(coordinates);
+      setMapZoom(6);
+    }
+  };
+
+  // Update map center when current weather data is fetched
+  useEffect(() => {
+    if (currentWeather && currentWeather.latitude && currentWeather.longitude) {
+      setMapCenter([currentWeather.latitude, currentWeather.longitude]);
+      setMapZoom(6); // Zoom to city level
+    }
+  }, [currentWeather]);
 
   const handleDateRangeChange = (days) => {
     setSelectedDateRange(days);
@@ -135,6 +168,7 @@ function App() {
           <div className="d-flex align-items-center">
             <LocationSearch 
               onLocationSelect={handleLocationSelect}
+              onLocationCoordinates={handleLocationCoordinates}
               currentLocation={selectedCity}
             />
           </div>
@@ -158,21 +192,28 @@ function App() {
                     <div className="col-md-3">
                       <h5>Air Quality</h5>
                       <span 
-                        className="badge fs-6" 
+                        className="badge fs-6 mb-2" 
                         style={{backgroundColor: getAQIColor(currentWeather.AQI)}}
                       >
                         AQI: {currentWeather.AQI} - {getAQILabel(currentWeather.AQI)}
                       </span>
+                      <div className="small">
+                        <div>PM2.5: {currentWeather['PM2.5']} μg/m³</div>
+                        <div>PM10: {currentWeather.PM10} μg/m³</div>
+                      </div>
                     </div>
                     <div className="col-md-3">
+                      <h6>Weather Details</h6>
                       <p className="mb-1">Wind: {currentWeather.wind_speed} km/h</p>
                       <p className="mb-1">Pressure: {currentWeather.pressure} mb</p>
                       <p className="mb-1">UV Index: {currentWeather.uv_index}</p>
                     </div>
                     <div className="col-md-3">
-                      <p className="mb-1">PM2.5: {currentWeather['PM2.5']} μg/m³</p>
-                      <p className="mb-1">PM10: {currentWeather.PM10} μg/m³</p>
+                      <h6>Other Pollutants</h6>
                       <p className="mb-1">NO2: {currentWeather.NO2} μg/m³</p>
+                      <p className="mb-1">SO2: {currentWeather.SO2} μg/m³</p>
+                      <p className="mb-1">CO: {currentWeather.CO} μg/m³</p>
+                      <p className="mb-1">O3: {currentWeather.O3} μg/m³</p>
                     </div>
                   </div>
                 </div>
@@ -231,88 +272,200 @@ function App() {
           </div>
         </div>
 
-        {/* AQI Chart */}
-        <div className="mb-4">
-          <div className="card">
-            <div className="card-body">
-              <h5 className="card-title">Air Quality Index (AQI) Trend (Past {selectedDateRange} days)</h5>
-              <ResponsiveContainer width="100%" height={400}>
-                <LineChart data={processedData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="formattedDate" />
-                  <YAxis />
-                  <Tooltip />
-                  <Line type="monotone" dataKey="AQI" stroke="#00aaff" strokeWidth={3} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </div>
-
-        {/* Air Quality Details */}
-        <div className="row mb-4">
-          <div className="col-md-6">
-            <div className="card">
-              <div className="card-body">
-                <h5 className="card-title">PM2.5 Levels</h5>
-                <ResponsiveContainer width="100%" height={250}>
-                  <LineChart data={data}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <Tooltip />
-                    <Line type="monotone" dataKey="PM2.5" stroke="#e74c3c" strokeWidth={2} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          </div>
-          <div className="col-md-6">
-            <div className="card">
-              <div className="card-body">
-                <h5 className="card-title">PM10 Levels</h5>
-                <ResponsiveContainer width="100%" height={250}>
-                  <LineChart data={data}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <Tooltip />
-                    <Line type="monotone" dataKey="PM10" stroke="#9b59b6" strokeWidth={2} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Heatmap */}
-        {data.length > 0 && data[0].latitude && (
-          <div className="mb-4">
-            <div className="card">
-              <div className="card-body">
-                <h5 className="card-title">Geographical Location</h5>
-                <MapContainer center={[data[0].latitude, data[0].longitude]} zoom={10} style={{ height: "400px", width: "100%" }}>
-                  <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                  <CircleMarker
-                    center={[data[0].latitude, data[0].longitude]}
-                    radius={20}
-                    fillColor={getAQIColor(currentWeather?.AQI || 0)}
-                    color={getAQIColor(currentWeather?.AQI || 0)}
-                    fillOpacity={0.7}
-                  >
-                    <LeafletTooltip>
-                      <div>
-                        <strong>{selectedCity}</strong><br/>
-                        Temperature: {currentWeather?.temperature}°C<br/>
-                        AQI: {currentWeather?.AQI} - {getAQILabel(currentWeather?.AQI || 0)}
+        {/* Current Air Quality Components */}
+        {currentWeather && (
+          <div className="row mb-4">
+            <div className="col-12">
+              <div className="card bg-light">
+                <div className="card-body">
+                  <h5 className="card-title">
+                    <i className="fas fa-wind me-2"></i>
+                    Current Air Quality in {currentWeather.city}
+                  </h5>
+                  <div className="row">
+                    {/* AQI Overall */}
+                    <div className="col-md-3 text-center">
+                      <div className="p-3 rounded" style={{backgroundColor: getAQIColor(currentWeather.AQI)}}>
+                        <h3 className="text-white mb-1">{currentWeather.AQI}</h3>
+                        <span className="text-white fw-bold">{getAQILabel(currentWeather.AQI)}</span>
                       </div>
-                    </LeafletTooltip>
-                  </CircleMarker>
-                </MapContainer>
+                      <small className="text-muted mt-2 d-block">Air Quality Index</small>
+                    </div>
+                    
+                    {/* Particulate Matter */}
+                    <div className="col-md-3">
+                      <h6 className="mb-3">Particulate Matter</h6>
+                      <div className="mb-2">
+                        <span className="badge bg-danger me-2">PM2.5</span>
+                        <strong>{currentWeather['PM2.5']}</strong> <small className="text-muted">μg/m³</small>
+                      </div>
+                      <div>
+                        <span className="badge bg-warning me-2">PM10</span>
+                        <strong>{currentWeather.PM10}</strong> <small className="text-muted">μg/m³</small>
+                      </div>
+                    </div>
+                    
+                    {/* Gases */}
+                    <div className="col-md-3">
+                      <h6 className="mb-3">Nitrogen & Sulfur</h6>
+                      <div className="mb-2">
+                        <span className="badge bg-info me-2">NO₂</span>
+                        <strong>{currentWeather.NO2}</strong> <small className="text-muted">μg/m³</small>
+                      </div>
+                      <div>
+                        <span className="badge bg-secondary me-2">SO₂</span>
+                        <strong>{currentWeather.SO2}</strong> <small className="text-muted">μg/m³</small>
+                      </div>
+                    </div>
+                    
+                    {/* Other Pollutants */}
+                    <div className="col-md-3">
+                      <h6 className="mb-3">Other Pollutants</h6>
+                      <div className="mb-2">
+                        <span className="badge bg-dark me-2">CO</span>
+                        <strong>{currentWeather.CO}</strong> <small className="text-muted">μg/m³</small>
+                      </div>
+                      <div>
+                        <span className="badge bg-success me-2">O₃</span>
+                        <strong>{currentWeather.O3}</strong> <small className="text-muted">μg/m³</small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         )}
+
+        {/* Enhanced World Map */}
+        <div className="mb-4">
+          <div className="card">
+            <div className="card-body">
+              <h5 className="card-title">
+                <i className="fas fa-globe me-2"></i>
+                Global Climate Monitor
+                {currentWeather && (
+                  <span className="ms-2 text-muted small">
+                    📍 {currentWeather.city}, {currentWeather.country}
+                  </span>
+                )}
+              </h5>
+              
+              {/* Earth-like spherical map container */}
+              <div 
+                className="map-earth-container"
+                style={{
+                  height: "500px", 
+                  width: "100%",
+                  borderRadius: "50%", // Makes it oval/circular
+                  overflow: "hidden",
+                  border: "8px solid #1e3a8a",
+                  boxShadow: "0 0 30px rgba(30, 58, 138, 0.3), inset 0 0 20px rgba(0, 0, 0, 0.2)",
+                  background: "linear-gradient(45deg, #1e40af, #3b82f6)",
+                  position: "relative"
+                }}
+              >
+                {/* Atmospheric glow effect */}
+                <div 
+                  style={{
+                    position: "absolute",
+                    top: "-10px",
+                    left: "-10px",
+                    right: "-10px", 
+                    bottom: "-10px",
+                    borderRadius: "50%",
+                    background: "radial-gradient(ellipse at center, rgba(59, 130, 246, 0.3) 0%, rgba(30, 64, 175, 0.1) 70%, transparent 100%)",
+                    pointerEvents: "none",
+                    zIndex: 1000
+                  }}
+                />
+                
+                <MapContainer 
+                  center={mapCenter} 
+                  zoom={mapZoom} 
+                  style={{ 
+                    height: "100%", 
+                    width: "100%",
+                    borderRadius: "50%"
+                  }}
+                  worldCopyJump={true} // Enables horizontal scrolling around the world
+                  maxBounds={[[-90, -180], [90, 180]]} // World bounds
+                  maxBoundsViscosity={1.0}
+                  minZoom={2}
+                  maxZoom={18}
+                  scrollWheelZoom={true}
+                  dragging={true}
+                  doubleClickZoom={true}
+                  attributionControl={false} // Clean look
+                >
+                  {/* Satellite/Terrain tile layer for realistic Earth appearance */}
+                  <TileLayer 
+                    url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                    attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
+                  />
+                  
+                  {/* Alternative beautiful map style */}
+                  <TileLayer 
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                    opacity={0.7} // Blend with satellite
+                  />
+                  
+                  {/* Map controller for automatic navigation */}
+                  <MapController center={mapCenter} zoom={mapZoom} />
+                  
+                  {/* Location marker */}
+                  {currentWeather && currentWeather.latitude && currentWeather.longitude && (
+                    <CircleMarker
+                      center={[currentWeather.latitude, currentWeather.longitude]}
+                      radius={15}
+                      fillColor={getAQIColor(currentWeather.AQI)}
+                      color="#ffffff"
+                      weight={3}
+                      fillOpacity={0.9}
+                      stroke={true}
+                    >
+                      <LeafletTooltip permanent={true} direction="top" offset={[0, -20]}>
+                        <div className="map-tooltip">
+                          <strong>{currentWeather.city}</strong><br/>
+                          🌡️ {currentWeather.temperature}°C<br/>
+                          🌬️ AQI: {currentWeather.AQI} - {getAQILabel(currentWeather.AQI)}<br/>
+                          💨 Wind: {currentWeather.wind_speed} km/h<br/>
+                          💧 Humidity: {currentWeather.humidity}%
+                        </div>
+                      </LeafletTooltip>
+                    </CircleMarker>
+                  )}
+                </MapContainer>
+              </div>
+              
+              {/* Map legend */}
+              <div className="mt-3">
+                <small className="text-muted">
+                  <strong>Air Quality Legend:</strong>
+                  <span className="ms-2 me-3">
+                    <span style={{backgroundColor: '#00e400', color: 'white', padding: '2px 6px', borderRadius: '3px', fontSize: '10px'}}>Good</span>
+                  </span>
+                  <span className="me-3">
+                    <span style={{backgroundColor: '#ffff00', color: 'black', padding: '2px 6px', borderRadius: '3px', fontSize: '10px'}}>Moderate</span>
+                  </span>
+                  <span className="me-3">
+                    <span style={{backgroundColor: '#ff7e00', color: 'white', padding: '2px 6px', borderRadius: '3px', fontSize: '10px'}}>Unhealthy for Sensitive</span>
+                  </span>
+                  <span className="me-3">
+                    <span style={{backgroundColor: '#ff0000', color: 'white', padding: '2px 6px', borderRadius: '3px', fontSize: '10px'}}>Unhealthy</span>
+                  </span>
+                  <span className="me-3">
+                    <span style={{backgroundColor: '#8f3f97', color: 'white', padding: '2px 6px', borderRadius: '3px', fontSize: '10px'}}>Very Unhealthy</span>
+                  </span>
+                  <span>
+                    <span style={{backgroundColor: '#7e0023', color: 'white', padding: '2px 6px', borderRadius: '3px', fontSize: '10px'}}>Hazardous</span>
+                  </span>
+                </small>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Anomalies */}
         <div className="mb-4">

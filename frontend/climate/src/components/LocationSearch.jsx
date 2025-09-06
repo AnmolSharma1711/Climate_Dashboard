@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import './LocationSearch.css';
 
-const LocationSearch = ({ onLocationSelect, currentLocation }) => {
+const LocationSearch = ({ onLocationSelect, currentLocation, onLocationCoordinates }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -136,6 +136,11 @@ const LocationSearch = ({ onLocationSelect, currentLocation }) => {
     // Clear current location indicator when manually selecting a location
     setUserLocation(null);
     onLocationSelect(location.name);
+    
+    // Pass coordinates to parent for map navigation
+    if (onLocationCoordinates && location.lat && location.lon) {
+      onLocationCoordinates([location.lat, location.lon]);
+    }
   };
 
   const getCurrentLocation = () => {
@@ -159,6 +164,11 @@ const LocationSearch = ({ onLocationSelect, currentLocation }) => {
             setSearchQuery(`${locationName}, ${response.data.country}`);
             setUserLocation({ lat: latitude, lon: longitude, name: locationName });
             onLocationSelect(locationName);
+            
+            // Pass coordinates to parent for map navigation
+            if (onLocationCoordinates) {
+              onLocationCoordinates([latitude, longitude]);
+            }
           }
         } catch (error) {
           console.error('Error getting location details:', error);
@@ -207,6 +217,9 @@ const LocationSearch = ({ onLocationSelect, currentLocation }) => {
     // Clear current location indicator when selecting a quick city
     setUserLocation(null);
     onLocationSelect(city.name);
+    
+    // For quick cities, we need to get coordinates from the API response
+    // This will be handled by the parent component's fetchDataForCity function
   };
 
   return (

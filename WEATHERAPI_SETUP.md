@@ -33,14 +33,14 @@
 
 ### Real-time Data:
 - ✅ Current weather conditions
-- ✅ Live air quality index (AQI)
-- ✅ Real-time PM2.5, PM10, NO2, SO2, CO, O3 levels
+- ✅ Live air quality index (AQI) - current only
+- ✅ Real-time PM2.5, PM10, NO2, SO2, CO, O3 levels - current only
 - ✅ Temperature, humidity, rainfall
 - ✅ Wind speed, pressure, UV index
 
 ### Historical Data:
 - ✅ Weather history for the last 7-30 days
-- ✅ Historical air quality data
+- ❌ Historical air quality data (not provided by WeatherAPI)
 - ✅ Temperature trends and anomaly detection
 
 ### Forecast Data:
@@ -53,10 +53,10 @@
 - ✅ Real coordinates for accurate mapping
 
 ### Enhanced Visualizations:
-- ✅ Color-coded AQI indicators
-- ✅ Interactive charts with real data
-- ✅ Current weather dashboard
-- ✅ Detailed air quality breakdown
+- ✅ Color-coded current AQI indicators
+- ✅ Interactive weather trend charts
+- ✅ Current weather dashboard with detailed air quality
+- ✅ Historical temperature and rainfall charts
 
 ## 🔧 API Endpoints Available
 
@@ -69,12 +69,14 @@
 
 ## 🎯 Benefits Over CSV Data
 
-1. **Real-time Updates**: Live data instead of static CSV
+1. **Real-time Updates**: Live weather data instead of static CSV
 2. **Global Coverage**: Any city worldwide
-3. **Accurate AQI**: Official air quality measurements
-4. **Rich Data**: 20+ weather and air quality parameters
-5. **No Data Limits**: Always up-to-date information
+3. **Current Air Quality**: Real-time AQI and pollutant measurements (current only)
+4. **Rich Weather Data**: 20+ weather parameters with historical trends
+5. **No Data Limits**: Always up-to-date weather information
 6. **Professional APIs**: Reliable, fast, and accurate
+
+**Important Note**: While WeatherAPI provides excellent current air quality data, historical AQI trends are not available. The dashboard focuses on current air quality status and historical weather patterns.
 
 ## 📊 Air Quality Index (AQI) Scale
 

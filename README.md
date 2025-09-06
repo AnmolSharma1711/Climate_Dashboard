@@ -7,11 +7,13 @@ A comprehensive real-time climate monitoring dashboard that provides accurate we
 - **Real-time Weather Data**: Live weather information using WeatherAPI.com
 - **Global Location Search**: Search any city worldwide with autocomplete
 - **Current Location Detection**: GPS-based location detection
-- **Accurate AQI Calculations**: EPA-standard Air Quality Index calculations for all major pollutants
-- **Interactive Visualizations**: Charts and graphs using Recharts
+- **Current Air Quality Data**: Real-time AQI and pollutant concentrations
+- **Interactive Visualizations**: Charts and graphs for weather trends using Recharts
 - **Responsive Design**: Full-screen responsive layout with Bootstrap
-- **Historical Data**: Access to historical weather patterns
+- **Historical Weather Data**: Access to historical weather patterns (temperature, rainfall, humidity)
 - **Weather Forecasts**: Future weather predictions
+
+**Note**: Air Quality Index (AQI) and pollutant data are only available for current conditions. Historical AQI trends are not provided by the WeatherAPI service.
 
 ## 🚀 Technology Stack
 
@@ -109,18 +111,25 @@ FLASK_ENV=development
 
 ## 📡 API Endpoints
 
-- `GET /api/current?city={city}` - Current weather and AQI
+- `GET /api/current?city={city}` - Current weather and AQI data
+- `GET /api/data?city={city}&days={days}` - Historical weather data (temperature, humidity, rainfall)
 - `GET /api/forecast?city={city}&days={days}` - Weather forecast
 - `GET /api/search-locations?q={query}` - Location search
+- `GET /api/summary?city={city}` - Weather summary
+- `GET /api/anomalies?city={city}` - Temperature anomalies
 - `GET /api/cities` - Popular cities list
+
+**Note**: AQI and pollutant data are only available through the `/api/current` endpoint.
 
 ## 🌟 Key Features Explained
 
-### Accurate AQI Calculations
-The dashboard performs proper unit conversions from WeatherAPI's µg/m³ values to EPA-standard units:
+### Current Air Quality Data
+The dashboard displays real-time air quality information with proper unit conversions from WeatherAPI's µg/m³ values to EPA-standard units:
 - CO: µg/m³ → ppm conversion
-- NO2, SO2, O3: µg/m³ → ppb conversion
+- NO2, SO2, O3: µg/m³ → ppb conversion  
 - PM2.5, PM10: Direct µg/m³ usage
+
+**Note**: Air quality data is only available for current conditions, not historical trends.
 
 ### Location Intelligence
 - Global city search with autocomplete
@@ -129,8 +138,9 @@ The dashboard performs proper unit conversions from WeatherAPI's µg/m³ values 
 - Country and region information
 
 ### Real-time Updates
-- Live weather conditions
-- Current air quality readings
+- Live weather conditions  
+- Current air quality readings (real-time only)
+- Historical weather data trends
 - Automatic data refresh
 - Error handling and fallbacks
 
