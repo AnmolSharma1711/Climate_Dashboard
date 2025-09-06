@@ -90,6 +90,42 @@ function App() {
     return "Hazardous";
   };
 
+  // Format date for chart display
+  const formatDate = (dateString, isCurrentData = false) => {
+    if (!dateString) return '';
+    
+    // If this is explicitly marked as current data or has time component, show as "NOW"
+    if (isCurrentData || (dateString.includes(':') && dateString.includes(' '))) {
+      return 'NOW';
+    }
+    
+    // Handle date format: "2025-09-02"
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return dateString;
+    
+    // Return short format: "Sep 2"
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric' 
+    });
+  };
+
+  // Process data to format dates for charts
+  const processedData = data.map((item, index) => {
+    // Any item with both date and time (contains ':' and ' ') is current data
+    const hasDateTime = item.date && item.date.includes(':') && item.date.includes(' ');
+    
+    // Debug logging for the last few items
+    if (index >= data.length - 2) {
+      console.log(`Item ${index}: date="${item.date}", hasDateTime=${hasDateTime}`);
+    }
+    
+    return {
+      ...item,
+      formattedDate: formatDate(item.date, hasDateTime)
+    };
+  });
+
   return (
     <div className="app">
       {/* Navbar */}
@@ -165,9 +201,9 @@ function App() {
               <div className="card-body">
                 <h5 className="card-title">Temperature Trend (Past {selectedDateRange} days)</h5>
                 <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={data}>
+                  <LineChart data={processedData}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
+                    <XAxis dataKey="formattedDate" />
                     <YAxis />
                     <Tooltip />
                     <Line type="monotone" dataKey="temperature" stroke="#ff7300" strokeWidth={2} />
@@ -182,9 +218,9 @@ function App() {
               <div className="card-body">
                 <h5 className="card-title">Rainfall (Past {selectedDateRange} days)</h5>
                 <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={data}>
+                  <BarChart data={processedData}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
+                    <XAxis dataKey="formattedDate" />
                     <YAxis />
                     <Tooltip />
                     <Bar dataKey="rainfall" fill="#82ca9d" />
@@ -201,9 +237,9 @@ function App() {
             <div className="card-body">
               <h5 className="card-title">Air Quality Index (AQI) Trend (Past {selectedDateRange} days)</h5>
               <ResponsiveContainer width="100%" height={400}>
-                <LineChart data={data}>
+                <LineChart data={processedData}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
+                  <XAxis dataKey="formattedDate" />
                   <YAxis />
                   <Tooltip />
                   <Line type="monotone" dataKey="AQI" stroke="#00aaff" strokeWidth={3} />

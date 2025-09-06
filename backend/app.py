@@ -320,6 +320,8 @@ def get_historical_weather_and_aqi(city="London", days=7):
                 'O3': air_quality.get('o3', 0)
             })
             
+        # Sort data chronologically (oldest to newest) for proper chart display
+        historical_data.sort(key=lambda x: x['date'])
         return historical_data
     except Exception as e:
         print(f"Error fetching historical weather: {e}")
@@ -401,7 +403,10 @@ def get_climate_data():
         all_data = historical_data
         if current_data:
             all_data.append(current_data)
-            
+        
+        # Ensure chronological order (oldest to newest)
+        all_data.sort(key=lambda x: x['date'])
+        
         return jsonify(all_data)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
