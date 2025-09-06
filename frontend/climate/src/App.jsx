@@ -333,7 +333,10 @@ function App() {
       {/* Navbar */}
       <nav className="navbar navbar-dark bg-dark mb-4">
         <div className="container-fluid">
-          <span className="navbar-brand mb-0 h1">�️ MausamNow</span>
+          <div className="logo-title-head" style={{display: "flex", alignItems: "center"}}>
+            <img src="/logo.jpg" alt="MausamNow Logo" className="logo" style={{height: "40px", width: "40px", borderRadius: "5px", marginRight: "8px"}}/>
+            <span className="navbar-brand mb-0 h1">MausamNow</span>
+          </div>
           <div className="d-flex align-items-center">
             <LocationSearch 
               onLocationSelect={handleLocationSelect}
@@ -368,7 +371,7 @@ function App() {
           <div className="row mb-4">
             <div className="col-12">
               <div className="card bg-primary text-white">
-                <div className="card-body">
+                <div className="card-body" style={{background: "rgb(0 126 113)"}}>
                   <h5 className="card-title">Current Weather in {currentWeather.city}</h5>
                   <div className="row">
                     <div className="col-md-4">
