@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "bootstrap/dist/css/bootstrap.min.css";
 import LocationSearch from "./components/LocationSearch";
+import DateRangeSelector from "./components/DateRangeSelector";
 
 // Recharts
 import {
@@ -25,15 +26,16 @@ function App() {
   const [summary, setSummary] = useState("");
   const [anomalies, setAnomalies] = useState([]);
   const [selectedCity, setSelectedCity] = useState("London");
+  const [selectedDateRange, setSelectedDateRange] = useState(7); // Default to 7 days
   const [loading, setLoading] = useState(false);
   const [currentWeather, setCurrentWeather] = useState(null);
 
-  // Fetch data for selected city
-  const fetchDataForCity = async (city) => {
+  // Fetch data for selected city and date range
+  const fetchDataForCity = async (city, days = selectedDateRange) => {
     setLoading(true);
     try {
-      // Fetch historical data
-      const dataRes = await axios.get(`http://127.0.0.1:5000/api/data?city=${city}&days=14`);
+      // Fetch historical data with specified days
+      const dataRes = await axios.get(`http://127.0.0.1:5000/api/data?city=${city}&days=${days}`);
       setData(dataRes.data);
 
       // Fetch current weather
@@ -55,15 +57,19 @@ function App() {
     }
   };
 
-  // Fetch data when city changes
+  // Fetch data when city or date range changes
   useEffect(() => {
     if (selectedCity) {
-      fetchDataForCity(selectedCity);
+      fetchDataForCity(selectedCity, selectedDateRange);
     }
-  }, [selectedCity]);
+  }, [selectedCity, selectedDateRange]);
 
   const handleLocationSelect = (cityName) => {
     setSelectedCity(cityName);
+  };
+
+  const handleDateRangeChange = (days) => {
+    setSelectedDateRange(days);
   };
 
   const getAQIColor = (aqi) => {
@@ -145,12 +151,19 @@ function App() {
           <p>{summary || "Loading summary..."}</p>
         </div>
 
+        {/* Date Range Selector */}
+        <DateRangeSelector
+          selectedRange={selectedDateRange}
+          onRangeChange={handleDateRangeChange}
+          loading={loading}
+        />
+
         {/* Charts Section */}
         <div className="row">
           <div className="col-md-6 mb-4">
             <div className="card">
               <div className="card-body">
-                <h5 className="card-title">Temperature Trend (Last 14 Days)</h5>
+                <h5 className="card-title">Temperature Trend (Past {selectedDateRange} days)</h5>
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={data}>
                     <CartesianGrid strokeDasharray="3 3" />
@@ -167,7 +180,7 @@ function App() {
           <div className="col-md-6 mb-4">
             <div className="card">
               <div className="card-body">
-                <h5 className="card-title">Rainfall (Last 14 Days)</h5>
+                <h5 className="card-title">Rainfall (Past {selectedDateRange} days)</h5>
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={data}>
                     <CartesianGrid strokeDasharray="3 3" />
@@ -186,7 +199,7 @@ function App() {
         <div className="mb-4">
           <div className="card">
             <div className="card-body">
-              <h5 className="card-title">Air Quality Index (AQI) Trend</h5>
+              <h5 className="card-title">Air Quality Index (AQI) Trend (Past {selectedDateRange} days)</h5>
               <ResponsiveContainer width="100%" height={400}>
                 <LineChart data={data}>
                   <CartesianGrid strokeDasharray="3 3" />

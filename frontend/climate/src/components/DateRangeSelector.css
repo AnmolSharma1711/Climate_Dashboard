@@ -1,0 +1,101 @@
+.date-range-selector {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  border: 1px solid #dee2e6;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.date-range-selector h6 {
+  color: #495057;
+  font-weight: 600;
+  margin-bottom: 0;
+}
+
+.date-range-selector .btn-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.date-range-selector .btn {
+  flex: 1;
+  min-width: 120px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border-radius: 8px;
+  padding: 8px 12px;
+  transition: all 0.3s ease;
+  border: 2px solid #007bff;
+}
+
+.date-range-selector .btn-outline-primary {
+  background-color: white;
+  color: #007bff;
+}
+
+.date-range-selector .btn-outline-primary:hover {
+  background-color: #007bff;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+.date-range-selector .btn-primary {
+  background-color: #007bff;
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.4);
+}
+
+.date-range-selector .btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.selected-range-info {
+  margin-top: 15px;
+  padding: 10px;
+  background-color: rgba(0, 123, 255, 0.1);
+  border-left: 4px solid #007bff;
+  border-radius: 0 8px 8px 0;
+}
+
+.selected-range-info .text-muted {
+  color: #495057 !important;
+  font-size: 0.9rem;
+}
+
+.selected-range-info .fa-spinner {
+  color: #007bff;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .date-range-selector .btn-group {
+    flex-direction: column;
+  }
+  
+  .date-range-selector .btn {
+    min-width: 100%;
+    margin-bottom: 8px;
+  }
+}
+
+/* Animation for loading state */
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.date-range-selector.loading {
+  animation: pulse 1.5s ease-in-out infinite;
+}
