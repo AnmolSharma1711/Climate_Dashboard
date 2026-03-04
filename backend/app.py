@@ -18,16 +18,20 @@ allowed_origins = [
     "http://localhost:5174",
     "http://127.0.0.1:5173",
     "http://127.0.0.1:5174",
+    "https://mausamnow.vercel.app",  # Production frontend
 ]
 
-# Add production URL from environment variable if available
+# Add custom frontend URL from environment variable if available
 FRONTEND_URL = os.getenv("FRONTEND_URL")
-if FRONTEND_URL:
+if FRONTEND_URL and FRONTEND_URL not in allowed_origins:
     allowed_origins.append(FRONTEND_URL)
-    # Also allow Vercel preview deployments
-    allowed_origins.append("https://*.vercel.app")
 
-CORS(app, origins=allowed_origins, supports_credentials=True)
+# Configure CORS with all necessary headers
+CORS(app, 
+     resources={r"/api/*": {"origins": allowed_origins}},
+     allow_headers=["Content-Type", "Authorization"],
+     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+     supports_credentials=True)
 
 """
 Weather and Cohere API configuration
