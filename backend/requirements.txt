@@ -5,4 +5,4 @@ numpy
 gunicorn
 requests
 cohere
-dotenv
+python-dotenv

@@ -11,7 +11,23 @@ from dotenv import load_dotenv
 
 load_dotenv()
 app = Flask(__name__)
-CORS(app)
+
+# CORS configuration - Allow both local development and production URLs
+allowed_origins = [
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:5174",
+]
+
+# Add production URL from environment variable if available
+FRONTEND_URL = os.getenv("FRONTEND_URL")
+if FRONTEND_URL:
+    allowed_origins.append(FRONTEND_URL)
+    # Also allow Vercel preview deployments
+    allowed_origins.append("https://*.vercel.app")
+
+CORS(app, origins=allowed_origins, supports_credentials=True)
 
 """
 Weather and Cohere API configuration

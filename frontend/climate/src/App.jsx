@@ -17,6 +17,9 @@ import {
   ResponsiveContainer
 } from "recharts";
 
+// API Base URL - uses environment variable or defaults to local
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000';
+
 // Leaflet
 import { MapContainer, TileLayer, CircleMarker, Tooltip as LeafletTooltip, useMap, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
@@ -69,11 +72,11 @@ function App() {
     setLoading(true);
     try {
       // Fetch historical data with specified days
-      const dataRes = await axios.get(`http://127.0.0.1:5000/api/data?city=${city}&days=${days}`);
+      const dataRes = await axios.get(`${API_BASE_URL}/api/data?city=${city}&days=${days}`);
       setData(dataRes.data);
 
       // Fetch current weather
-      const currentRes = await axios.get(`http://127.0.0.1:5000/api/current?city=${city}`);
+      const currentRes = await axios.get(`${API_BASE_URL}/api/current?city=${city}`);
       setCurrentWeather(currentRes.data);
 
       // Check if we have a cached summary for this city
@@ -83,7 +86,7 @@ function App() {
         // Fetch summary only if not cached
         setSummaryLoading(true);
         try {
-          const summaryRes = await axios.get(`http://127.0.0.1:5000/api/summary?city=${city}`);
+          const summaryRes = await axios.get(`${API_BASE_URL}/api/summary?city=${city}`);
           const newSummary = summaryRes.data.summary;
           setSummary(newSummary);
           // Cache the summary
@@ -100,7 +103,7 @@ function App() {
       }
 
       // Fetch anomalies
-      const anomaliesRes = await axios.get(`http://127.0.0.1:5000/api/anomalies?city=${city}`);
+      const anomaliesRes = await axios.get(`${API_BASE_URL}/api/anomalies?city=${city}`);
       setAnomalies(anomaliesRes.data);
 
     } catch (err) {
@@ -127,7 +130,7 @@ function App() {
         try {
           // Use coordinates to get location name and weather data
           const coords = `${latitude},${longitude}`;
-          const response = await axios.get(`http://127.0.0.1:5000/api/current?city=${coords}`);
+          const response = await axios.get(`${API_BASE_URL}/api/current?city=${coords}`);
           
           if (response.data && response.data.city) {
             const locationName = response.data.city;
@@ -208,7 +211,7 @@ function App() {
       console.log(`Map clicked at coordinates: ${coords}`);
       
       // Fetch current weather data for the clicked coordinates
-      const response = await axios.get(`http://127.0.0.1:5000/api/current?city=${coords}`);
+      const response = await axios.get(`${API_BASE_URL}/api/current?city=${coords}`);
       
       if (response.data && response.data.city) {
         const locationName = response.data.city;
